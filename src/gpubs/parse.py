@@ -1,36 +1,77 @@
+import pandas as pd
+import numpy as np
+import re
 import os
-import subprocess
-import urllib.request
-from urllib.error import URLError
-from shutil import rmtree
 
-def check_disk_space(predicted_size, download_dir, verbose):
-    required_space = predicted_size
-    available_space = os.statvfs(download_dir).f_frsize * os.statvfs(download_dir).f_bavail
-    required_space_human = subprocess.check_output(['numfmt', '--to=iec-i', '--suffix=B', str(required_space)]).decode().strip()
-    available_space_human = subprocess.check_output(['numfmt', '--to=iec-i', '--suffix=B', str(available_space)]).decode().strip()
+from gpubs.log import msg1, msg2
 
-    msg1(verbose, f"Predicted download size = {required_space_human}, Available space = {available_space_human}")
+def extract_data(element):
+    data = {}
+    data['PMID'] = element.findtext('MedlineCitation/PMID')
+    data['Title'] = element.findtext('MedlineCitation/Article/ArticleTitle')
+    data['Abstract'] = element.findtext('MedlineCitation/Article/Abstract/AbstractText')
+    data['Journal'] = element.findtext('MedlineCitation/Article/Journal/Title')
+    data['PublicationDate'] = element.findtext('MedlineCitation/Article/Journal/JournalIssue/PubDate/Year')
+    data['JournalTitle'] = element.findtext('MedlineCitation/Article/Journal/Title')
+    data['ArticleType'] = element.findtext('MedlineCitation/Article/PublicationTypeList/PublicationType')
+    
+    # Extract the descriptor names and qualifier names from the XML
+    mesh_headings = element.findall('.//MeshHeading')
+    mesh_heading_list = []
+    for heading in mesh_headings:
+        descriptor_name = heading.findtext('DescriptorName')
+        qualifier_names = [qualifier.text for qualifier in heading.findall('QualifierName')]
+        mesh_heading_list.append(descriptor_name)
+        mesh_heading_list.extend(qualifier_names)
+    data['MeshHeadingList'] = ','.join(mesh_heading_list)
+                                        
+    publication_types = element.findall('MedlineCitation/Article/PublicationTypeList/PublicationType')
+    data['PublicationTypeList'] = ",".join([ptype.text for ptype in publication_types])
+    
+    return data
 
-    if required_space > available_space:
-        print(f"Insufficient disk space! Required: {required_space_human}, Available: {available_space_human}")
-        exit(1)
+def prune_df(df, length_threshold = 405, verbose=2):
+    # exclude articles with no abstract, no date, or abstracts that are too short (less than length_threshold letters)
+    pruned_df = df[df['Abstract'].notna() & df['PublicationDate'].notna()]
 
-def download_file(url, file_path, verbose):
-    try:
-        urllib.request.urlretrieve(url, file_path)
-    except URLError as e:
-        msg1(verbose, f"Error downloading file: {url}")
-        msg1(verbose, f"Reason: {str(e.reason)}")
-        #exit(1)
+    # cut out any short articles
+    all_pruned = len(pruned_df)
+    msg2(verbose, f"Number of all abstracts before pruning short articles = {all_pruned}")
+    pruned_df = pruned_df[pruned_df['Abstract'].str.len() >= length_threshold]
+    long_pruned = len(pruned_df)
+    msg2(verbose, f"Number after pruning short articles = {long_pruned}")
+    msg2(verbose, f"Number discarded for being too short: {all_pruned - long_pruned}")
 
-def verify_md5(file_path, md5_file_path, verbose):
-    try:
-        output = subprocess.check_output(['md5sum', '-c', os.path.basename(md5_file_path)], cwd=os.path.dirname(md5_file_path), stderr=subprocess.DEVNULL).decode()
-        #output = subprocess.check_output(['md5sum', '-c', md5_file_path], stderr=subprocess.DEVNULL).decode()
-        if "OK" in output:
-            msg2(verbose, f"{md5_file_path}: OK - MD5 checksum verification succeeded.")
-        else:
-            msg1(verbose, f"ERROR: {md5_file_path}: FAILED - MD5 checksum verification failed.")
-    except subprocess.CalledProcessError:
-        msg1(verbose, f"ERROR: {md5_file_path}: FAILED - MD5 checksum verification failed.")
+    return pruned_df
+
+def get_pub_df(filename, inpath, outpath, length_threshold, prune=True,verbose=0):
+    import gzip
+    import xml.etree.ElementTree as ET
+    import pandas as pd
+
+    pubmed_filepath = os.path.join(inpath, filename)
+    # Open the gzip'd XML file
+    with gzip.open(pubmed_filepath, 'rb') as f:
+        # Read the contents of the gzip'd file
+        gzip_content = f.read()
+
+    # Parse the XML content using ElementTree
+    root = ET.fromstring(gzip_content)
+
+    # Extract data from each article and store in a list
+    articles = []
+    for article in root.findall('.//PubmedArticle'):
+        articles.append(extract_data(article))
+
+    # Create a DataFrame from the list of articles
+    df = pd.DataFrame(articles)
+    df = df.drop_duplicates()
+    if prune:
+        msg2(verbose, f"Number of all articles:{len(df)}")
+        df = prune_df(df, length_threshold = length_threshold, verbose=verbose)
+        msg2(verbose, f"Number of pruned articles:{len(df)}")
+    
+    # convert objects to simple types
+    df['PublicationDate'] = df['PublicationDate'].astype(int)
+
+    return df

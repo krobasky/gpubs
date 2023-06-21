@@ -1,3 +1,13 @@
+from typing import List, Dict, Set
+import os
+
+from gpubs.models import ReferenceData
+from gpubs.log import msg1, msg2
+from gpubs.reference import download_gene_symbols, extract_gene_data
+from gpubs.search_words import fetch_brown_corpus, create_stop_words, read_search_stop, filter_search_terms
+from gpubs.fetch import check_disk_space, download_file, verify_md5
+from gpubs.parse import get_pub_df
+
 def create_gene_reference_data(m: ReferenceData):
     
     raw_gene_info_filepath = os.path.join(m.raw_path(), m.gene_info_filename)
@@ -141,6 +151,7 @@ def create_filtered_search_terms(m: ReferenceData) -> List:
 
 
 def fetch_abstracts(m: ReferenceData):
+    import subprocess
     
     num_files = m.num_abstract_xml_files
     refresh = m.refresh_abstract_xml_files
@@ -251,3 +262,78 @@ def create_pubcsv_dataset(m: ReferenceData) -> List:
             csv_list.append(csv_filepath)
             
     return(csv_list)
+
+def create_gene_files(m: ReferenceData):
+    """ Calls the search.awk script in gpubs/scripts """
+    
+    filtered_terms_file = os.path.join(m.search_path(), m.filtered_terms_filename)
+    csv_inpath = m.pub_outpath()
+    csv_outpath = m.genes_outpath()
+    verbose = m.verbose
+    
+    import glob
+    import subprocess
+    awk_script = "scripts/search.awk" # xxx move this to ReferenceData
+    for file_name_path in glob.glob(os.path.join(csv_inpath,"pubmed*.xml.gz.csv")):
+        file_name = os.path.basename(file_name_path)
+        input_csv_file = os.path.join(csv_inpath, file_name)
+        output_csv_file = os.path.join(csv_outpath, file_name)
+        msg2(verbose, f"Creating {output_csv_file}")
+        error_file = os.path.join(csv_outpath, f"{file_name}.err")
+        command = [awk_script, filtered_terms_file, input_csv_file]
+        with open(output_csv_file, "w") as output, open(error_file, "w") as error:
+            subprocess.run(command, stdout=output, stderr=error)
+
+def pipeline(m: ReferenceData):
+    """ 
+    Run the whole data pipeline, end to end. See QuickStart notebook for step-by-step outputs
+
+    Example:
+
+      import gpubs
+      from gpubs.models import ReferenceData
+      from gpubs.api import pipeline
+
+      # Create data model
+      m = ReferenceData(version = "../../v1",       # make data root above any git repo
+                        verbose = 2,                # print all the info messages
+                        num_abstract_xml_files = 3, # only fetch 3 files from NCBI
+                        dbxrefs = ["AllianceGenome.txt", "Ensembl.txt", "HGNC.txt", "IMGT_GENE-DB.txt"]  # exclude miRNA and MIM
+                 )
+      pipeline(m)
+
+    """
+
+    # Fetch data/raw/gene_info.gz 
+    # and create the human genes lists under data/reference (gene_symbols.txt, gene_synonyms.txt, dbxrefs/*)
+    create_gene_reference_data(m)
+
+
+    # The goal of the following 3 calls is to 
+    # create data/search_terms/filtered_terms.txt from english language corpus
+
+    # Create a word frequency list from an English language corpus
+    _ = create_frequency_list(m)
+
+    # Create the file of gene search terms (data/search_terms/search_terms.txt) using stop words from frequency list
+    create_search_terms_file(m)
+
+    # Create the filtered_terms.txt file
+    final_terms = create_filtered_search_terms(m)
+
+
+    # Fetch NCBI articl zips
+    # - There are about 1100 files with about 15000 abstracts each.
+    # - ~60GB is needed to get all files
+    # - At about 2 min/file ... ~ 2 days to get 'em all
+    fetch_abstracts(m)
+
+    # Create CSVs from XMLs
+    # - This takes about 3 minutes to do 10 files; or about 5 hours to do them all
+    csv_list = create_pubcsv_dataset(m)
+
+
+    # Create new CSVs that include GENES column under data/csvpubs/genes
+    # - Takes about 40s for 10 files, which is much slower than just running the awk script
+    # - With default settings, it filters out about 42% of the abstracts, most of which are 2022
+    create_gene_files(m)

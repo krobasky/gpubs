@@ -1,3 +1,4 @@
+from gpubs.log import msg2
 import requests
 
 def download_gene_symbols(output_filepath = "data/raw/gene_info.gz", url = "https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz", verbose=0):
@@ -7,7 +8,7 @@ def download_gene_symbols(output_filepath = "data/raw/gene_info.gz", url = "http
     with open(output_filepath, "wb") as file:
         file.write(response.content)
 
-    msginfo(verbose, "Download completed.")
+    msg2(verbose, "Download completed.")
 
 def extract_gene_data(filepath = "data/raw/gene_info.gz"):
     """ returns 3 sets """

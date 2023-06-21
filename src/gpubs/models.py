@@ -2,6 +2,8 @@ import os
 from typing import List, Dict, Set
 from pydantic import BaseModel, root_validator
 
+from gpubs.log import msg1,msg2
+
 class ReferenceData(BaseModel):
     """
     Files for retrieving and transforming reference gene information

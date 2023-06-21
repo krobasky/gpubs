@@ -3,7 +3,7 @@ import subprocess
 import urllib.request
 from urllib.error import URLError
 from shutil import rmtree
-
+from gpubs.log import msg1, msg2
 def check_disk_space(predicted_size, download_dir, verbose):
     required_space = predicted_size
     available_space = os.statvfs(download_dir).f_frsize * os.statvfs(download_dir).f_bavail
