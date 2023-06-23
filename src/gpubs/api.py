@@ -273,13 +273,18 @@ def create_gene_files(m: ReferenceData):
     
     import glob
     import subprocess
-    awk_script = "scripts/search.awk" # xxx move this to ReferenceData
+    awk_script = "search.awk"
+    # Check if awk_script is under ./scripts - e.g., this is being run from the notebook from inside the repo
+    # otherwise awk_script should be in path - e.g. gpubs has been pip install'd
+    if os.path.isfile(os.path.join("scripts", awk_script)):
+        awk_script = os.path.join("scripts", awk_script)
     for file_name_path in glob.glob(os.path.join(csv_inpath,"pubmed*.xml.gz.csv")):
         file_name = os.path.basename(file_name_path)
         input_csv_file = os.path.join(csv_inpath, file_name)
         output_csv_file = os.path.join(csv_outpath, file_name)
         msg2(verbose, f"Creating {output_csv_file}")
         error_file = os.path.join(csv_outpath, f"{file_name}.err")
+        # xxx test this out, then run make to install version 2
         command = [awk_script, filtered_terms_file, input_csv_file]
         with open(output_csv_file, "w") as output, open(error_file, "w") as error:
             subprocess.run(command, stdout=output, stderr=error)
