@@ -64,7 +64,8 @@ class ReferenceData(BaseModel):
                     'ii', 'inos', 'iv', 'killer', 'lab', 'lamp', 'laser', 'map', 'mask', 'mater', 'melt', 'mice', 'minor', 'miss', 'mv',
                     'nail', 'net', 'not', 'osf', 'pan', 'par', 'pha', 'rab', 'race', 'rain', 'rank',
                     'san', 'sand', 'se', 'sink', 'soft', 'spatial', 'spin', 'spp', 'steel', 'stop',
-                    'storm', 'tactile', 'tau', 'theta', 'tip', 'traits', 'via']
+                    'storm', 'tactile', 'tau', 'theta', 'tip', 'traits', 'via', 
+                              "apex", "app", "apps", "args", "ash", "bar", "bit", "cast", "cats", "cava", "cd", "clock", "coil", "cope", "cord", "delta", "eat", "eg", "fats", "fish", "fix", "flame", "flap", "fuse", "grid", "gum", "heal", "hip", "hits", "hub", "igm", "li", "maps", "mets", "mix", "mn", "ms", "nm", "nodal", "pigs", "prey", "pros", "pt", "pva", "ray", "sac", "scar", "sea", "sea", "sp", "steep", "tank", "tied", "toll", "trap", "wire"]
 
     search_terms_filename: str = "search_terms.txt"
     
