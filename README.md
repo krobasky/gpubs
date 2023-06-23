@@ -2,10 +2,25 @@
 
 Under construction.
 
-Notebook works; all code has been pasted into source files. It just needs to be stitched together and doc'd with sphinx.
+## Install:
 
-There is one significant bug: the custom_words aren't working. Get those working and the abstracts should be significantly pruned.
+```
+python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps gpubs # to get it from test registry
+```
 
-Also add a feature for filtering for a custom list.
+## To upload the package:
 
+```
+cd src
+```
 
+Bump the `VERSION` variable in `release-info.json`, then:
+
+```
+make
+```
+
+## To do
+
+* Create doc with sphinx
+* Add a feature for filtering for a custom list.

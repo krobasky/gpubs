@@ -1,2 +1,2 @@
-include release-info.son 
-include gpubs/pyproject.toml
+include release-info.json 
+
