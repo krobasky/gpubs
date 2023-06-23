@@ -1,0 +1,13 @@
+{
+    "VERSION": "1",
+    "RELEASE": 1.0,
+    "LIBNAME": "gpubs",
+    "COPYRIGHT": "2023, Saboredge",
+    "DESCRIPTION": "Pipeline to download and annotate gene-related publications",
+    "REPONAME": "saboredge/gpubs",
+    "KEYWORDS": [
+	"pubmed",
+	"abstracts",
+	"genetics"
+    ]
+}
