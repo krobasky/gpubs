@@ -343,11 +343,15 @@ def pipeline(m: ReferenceData):
     final_terms = create_filtered_search_terms(m)
 
 
-    # Fetch NCBI articl zips
-    # - There are about 1100 files with about 15000 abstracts each.
+    # Fetch NCBI article zips
+    # - There are 1165 files (2023) with about 15000 abstracts each.
     # - ~60GB is needed to get all files
-    # - At about 2 min/file ... ~ 2 days to get 'em all
+    # - On AWS you can get them all in under an hour. 5 hours on consumer-grade wifi.
     fetch_abstracts(m)
+
+    # Get NCBI 
+    # ~ 222 abstracts in June 2023
+    fetch_abstracts(m, get_updates = True) 
 
     # Create CSVs from XMLs
     # - This takes about 3 minutes to do 10 files; or about 5 hours to do them all
