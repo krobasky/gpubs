@@ -22,12 +22,19 @@ class ReferenceData(BaseModel):
         os.makedirs(self.dbxref_path(), exist_ok=True)
         os.makedirs(self.search_path(), exist_ok=True)
         os.makedirs(self.pub_inpath(), exist_ok=True)
+        os.makedirs(os.path.join(self.pub_inpath(),self.abstract_updatefiles_inpath), exist_ok=True)
         os.makedirs(self.pub_outpath(), exist_ok=True)
         os.makedirs(self.genes_outpath(), exist_ok=True)
         
         msg2(self.verbose, "Created directory structure.")
 
     ncbi_gene_info_url: str = "https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz"
+
+    ncbi_ftp_host: str = "ftp.ncbi.nlm.nih.gov"
+
+    ncbi_ftp_baseline_path: str = "/pubmed/baseline/"
+
+    ncbi_ftp_updatefiles_path: str = "/pubmed/updatefiles/"
     
     data_root: str  = "data/"
     """ full path to where all the raw, reference, and generated data are stored """
@@ -72,6 +79,9 @@ class ReferenceData(BaseModel):
     filtered_terms_filename: str = "filtered_terms.txt"
     
     abstract_inpath: str = "pubs/"
+
+    abstract_updatefiles_inpath: str = "updates/"
+    """ This path gets added on to abstract_inpath (or pub_inpath) """
     
     refresh_abstract_xml_files: bool = False
     """ Set to True to overwrite downloaded NCBI XML abstract files and checksum files """

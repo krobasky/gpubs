@@ -6,7 +6,7 @@ from gpubs.log import msg1, msg2
 from gpubs.reference import download_gene_symbols, extract_gene_data
 from gpubs.search_words import fetch_brown_corpus, create_stop_words, read_search_stop, filter_search_terms
 from gpubs.fetch import check_disk_space, download_file, verify_md5
-from gpubs.parse import get_pub_df
+from gpubs.parse import parse_pubs
 
 def create_gene_reference_data(m: ReferenceData):
     
@@ -150,27 +150,39 @@ def create_filtered_search_terms(m: ReferenceData) -> List:
     return final_terms
 
 
-def fetch_abstracts(m: ReferenceData):
+def fetch_abstracts(m: ReferenceData, get_updates: bool = False):
+    """ Downloads files from m.ncbi_ftp_host. 
+
+    ARGS:
+
+      get_updates: If True then download the updatefiles, otherwise get the baseline. See : https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/README.txt
+
+    """
     import subprocess
     
     num_files = m.num_abstract_xml_files
     refresh = m.refresh_abstract_xml_files
+    ftp_host = m.ncbi_ftp_host
     download_dir = m.pub_inpath()
     verbose = m.verbose
+    if get_updates:
+        download_dir = os.path.join(download_dir, m.abstract_updatefiles_inpath)
+        ftp_path = m.ncbi_ftp_updatefiles_path
+        msg2(verbose, f"! Getting update files, download_dir={download_dir}.")
+    else:
+        ftp_path = m.ncbi_ftp_baseline_path
     
     """ This can probably be done faster with download_files.sh """ 
     msg2(verbose, f"Download Directory: {download_dir}")
     msg2(verbose, f"Number of abstracts to ensure have been downloaded: {num_files}")
     msg2(verbose, f"Refresh: {refresh}")
 
-    # FTP settings
-    ftp_host = "ftp.ncbi.nlm.nih.gov"
-    ftp_path = "/pubmed/baseline/"
 
     # Retrieve file names and find the largest number
     #file_list = subprocess.check_output(['curl', '-s', f"ftp://{ftp_host}{ftp_path}"]).decode().splitlines()
     
     output = subprocess.check_output(['curl', '-s', f"ftp://{ftp_host}{ftp_path}"]).decode()
+    msg2(verbose, f"file_list curl: curl -s ftp://{ftp_host}{ftp_path}")
     file_list = [line.split()[-1] for line in output.splitlines() if line.endswith(".xml.gz")]
 
     msg2(verbose, f"Total number of NCBI abstract XML files: {len(file_list)}")
@@ -180,9 +192,10 @@ def fetch_abstracts(m: ReferenceData):
     msg2(verbose, f"latest_files {num_files}: {latest_files}")
 
     # Check if enough files are available
+    import sys
     if len(latest_files) == 0:
         msg1(verbose, "Error: Insufficient number of files available!")
-        exit(1)
+        sys.exit(1)
 
     # Calculate total predicted size
     total_size = 0
@@ -238,28 +251,31 @@ def fetch_abstracts(m: ReferenceData):
     total_size_human = subprocess.check_output(['numfmt', '--to=iec-i', '--suffix=B', str(total_size)]).decode().strip()
     msg2(verbose, f"Total size of abstract files: {total_size_human}")
 
-def create_pubcsv_dataset(m: ReferenceData) -> List:
-    """ Takes about 14min for 30 (2 per minute) """
+def create_pubcsv_dataset(m: ReferenceData, parse_updates: bool = False) -> List:
+    """ Takes about 14min for 30 (2-3 per minute) 
+
+    ARGS:
+
+      parse_updates: If True then parse the updatefiles, otherwise parse the baseline. See : https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/README.txt
+      
+    """
+    import os
     
     abstract_length_threshold = m.abstract_length_threshold
     pub_inpath = m.pub_inpath()
+    pub_updatefiles_inpath = os.path.join(m.pub_inpath(), m.abstract_updatefiles_inpath)
+    if parse_updates:
+        pub_inpath = os.path.join(pub_inpath, m.abstract_updatefiles_inpath)
     pub_outpath = m.pub_outpath()
     verbose = m.verbose
-
-    import os
-    import glob
     
     csv_list = []
+
     # Iterate through files in the directory
-    for filepath in glob.glob(os.path.join(pub_inpath, "pubmed*.xml.gz")):
-        msg2(verbose, f"Converting file {filepath}")
-        if os.path.isfile(filepath):
-            filename = os.path.basename(filepath)
-            df = get_pub_df(filename=filename, inpath=pub_inpath, outpath= pub_outpath, prune=True, length_threshold = abstract_length_threshold, verbose = verbose)
-            csv_filepath = os.path.join(pub_outpath, f"{filename}.csv")
-            df.to_csv(csv_filepath, header=False, index=False, sep="\t")
-            msg2(verbose, f"Wrote file:{csv_filepath}")
-            csv_list.append(csv_filepath)
+    csv_list = parse_pubs(inpath=pub_inpath, outpath=pub_outpath, length_threshold = abstract_length_threshold, csv_list=csv_list, verbose=verbose)
+
+    # Repeat for 'updatefiles'
+    csv_list = parse_pubs(inpath=pub_updatefiles_inpath, outpath=pub_outpath, length_threshold = abstract_length_threshold, csv_list=csv_list, verbose=verbose)
             
     return(csv_list)
 

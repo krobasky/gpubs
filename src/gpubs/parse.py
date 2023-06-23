@@ -75,3 +75,19 @@ def get_pub_df(filename, inpath, outpath, length_threshold, prune=True,verbose=0
     df['PublicationDate'] = df['PublicationDate'].astype(int)
 
     return df
+
+def parse_pubs(inpath, outpath, length_threshold, csv_list, verbose=0):
+    import glob
+
+    for filepath in glob.glob(os.path.join(inpath, "pubmed*.xml.gz")):
+        msg2(verbose, f"Converting file {filepath}")
+        if os.path.isfile(filepath):
+            filename = os.path.basename(filepath)
+            df = get_pub_df(filename=filename, inpath=inpath, outpath= outpath, prune=True, length_threshold = length_threshold, verbose = verbose)
+            csv_filepath = os.path.join(outpath, f"{filename}.csv")
+            df.to_csv(csv_filepath, header=False, index=False, sep="\t")
+            msg2(verbose, f"Wrote file:{csv_filepath}")
+            csv_list.append(csv_filepath)
+
+    return csv_list
+
