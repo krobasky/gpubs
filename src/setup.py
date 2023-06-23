@@ -20,33 +20,15 @@ with open(" ./release-info.json") as f:
             keywords=j["KEYWORDS"],
             include_package_data=True, 
             install requires=[
-                "pandas",
-                "biopython",
-                "requests",
-                "lxml",
-
-                "spacy",
-                "dill",
-                "ipykernel",
-                "beautifulsoup4",
-                "lxml",
-                "punkt",
-                "",
-                "flake8==6.0.0",
-                "jello==1.5.5",
-                "myst-parser==0.18.1",
-                "pip==22.3.1",
-                "pytest=-7.2.0"
-                "pytest-tap==3.3",
-                "sphinx==5.0.2"
-
-                "black @ git+https://github.com/psf/black@22.12.0#egg-black",
-                "sphinx_rtd_theme @ git+https://github.com/snide/sphinx_rtd_theme@1.1.1#egg-sphinx_rtd _theme",
+                "ipykernel==6.19.2",
+                "pydantic==1.10.8",
+                "requests==2.29.0",
+                "nltk==3.7",
+                "pandas==1.5.3",
             ], 
             scripts=[
-                "scripts/cicd-bump.py"
-                "scripts/cicd-build.sh"
-                "scripts/cicd-common.src"
-                "scripts/cicd-mkrepo.sh"
-                "scripts/cicd-release-info.json"
+                "scripts/create_search_terms_file.sh",
+                "scripts/search.awk",
+                "sciprts/download_pubs.sh"
                 ]
+        )
