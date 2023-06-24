@@ -1,6 +1,7 @@
 from typing import Set
 import nltk
 
+
 def fetch_brown_corpus():
     from nltk.corpus import brown
 
@@ -23,22 +24,20 @@ def read_search_stop(search_file, stop_words):
 
 
 def filter_search_terms(search_terms, stop_words):
-    filtered_terms = []
+    filtered_terms = set() # use a set to avoid duplicates
     matched_stop_words = []
 
-    # get the matched stop words and keep in original case
     for term in search_terms:
         if term.lower() in stop_words:
+            # keep stop_words in original case
             matched_stop_words.append(term)
-
-    # get the filtered terms, lower case them
-    filtered_terms = [
-        term.lower() for term in search_terms if term.lower() not in stop_words
-    ]
+        else:
+            # lower case non-stop_words for permissive matching
+            filtered_terms.add(term.lower())
 
     # add the two lists together so the matched terms retain original case
     # this will allow for finding genes that are also common english words
-    final_terms = filtered_terms + matched_stop_words
+    final_terms = list(filtered_terms) + matched_stop_words
     return (final_terms, filtered_terms, matched_stop_words)
 
 
