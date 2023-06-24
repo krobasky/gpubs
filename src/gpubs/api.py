@@ -15,6 +15,19 @@ from gpubs.parse import parse_pubs
 
 
 def create_gene_reference_data(m: ReferenceData):
+    """ Gets gene reference data into a convenient format for creating a m.filtered_terms_files, and ultimately, tagging abstracts with gene information.
+
+    Performs the following:
+
+      1. Downloads gene_info.gz from m.ncbi_gene_info_url
+
+      2. Parses gene_info.gz to create the following files:
+
+        - m.reference_path()/m.gene_symbols_filename [default = v1/reference/gene_symbols.txt]
+        - m.reference_path()/m.gene_synonyms_filename [default = v1/reference/gene_synonyms.txt]
+        - m.dbxref_path()/*.txt [default = v1/reference/dbxrefs/*.txt]
+
+    """
 
     raw_gene_info_filepath = os.path.join(m.raw_path(), m.gene_info_filename)
     reference_gene_symbols_filepath = os.path.join(
@@ -74,7 +87,14 @@ def create_gene_reference_data(m: ReferenceData):
 
 
 def create_frequency_list(m: ReferenceData) -> List:
+    """ Creates a file that lists the most common English words, up to (m.corpus_stop_word_list_length) in size, 
+    and saves to m.search_path()/m.frequency_list_filename [default = v1/data/search_terms/frequency_list.txt]
 
+    Returns:
+
+      A list of most common words, most common first, all lower case
+
+    """
     frequency_list_outpath = os.path.join(m.search_path(), m.frequency_list_filename)
     stop_word_list_length = m.corpus_stop_word_list_length
     verbose = m.verbose
@@ -106,6 +126,22 @@ def create_frequency_list(m: ReferenceData) -> List:
 
 
 def create_search_terms_file(m: ReferenceData):
+    """Uses the files from `create_gene_reference_data` to generate the list of terms for searching each abstract.
+
+    Each abstract is searched for gene symbols, synonyms, and
+    dbxref's. The file created here lists all the gene info terms to
+    use for that search. The file is saved to
+    m.search_path()/m.search_terms_filename [default =
+    `v1/data/search_terms/search_terms.txt`].
+
+    The file f"{m.search_path()/m.search_terms_filename}.unsorted" is a byproduct and can be discarded.
+
+    Returns:
+
+      A list of the search terms (gene symbols, synonyms and accession IDs)
+
+    """
+
     import os
 
     dbxrefs = m.dbxrefs
@@ -151,6 +187,22 @@ def create_search_terms_file(m: ReferenceData):
 
 
 def create_filtered_search_terms(m: ReferenceData) -> List:
+    """Filters search_terms against m.frequency_list_filename and m.custom_stop_words. 
+
+    If the search term (e.g., gene name) is also a stop word (e.g.,
+    'DANGER'), then retain the term's original case. Otherwise,
+    lowercase the term. Either way, add it to the list of terms to be returned.
+
+    Ultimately, when an abstract is searched for a filtered_term, it
+    will only match case if the term is a stop_word. This allows for
+    more permissive matching against gene names in abstracts that use
+    peculiar case.
+
+    Returns:
+
+      List of the terms, all lowercase, accept for those that matched an English language word in the frequency_list.
+
+    """
 
     search_file = os.path.join(m.search_path(), m.search_terms_filename)
     frequency_list_outpath = os.path.join(m.search_path(), m.frequency_list_filename)
@@ -297,7 +349,7 @@ def fetch_abstracts(m: ReferenceData, get_updates: bool = False):  # noqa: C901
 
 
 def create_pubcsv_dataset(m: ReferenceData, parse_updates: bool = False) -> List:
-    """Takes about 14min for 30 (2-3 per minute)
+    """Parse all the XML files into csv files. Overwites anything previously written. Takes about 14min for 30 (2-3 per minute)
 
     ARGS:
 
@@ -338,7 +390,18 @@ def create_pubcsv_dataset(m: ReferenceData, parse_updates: bool = False) -> List
 
 
 def create_gene_files(m: ReferenceData):
-    """Calls the search.awk script in gpubs/scripts"""
+    """Calls the search.awk script in gpubs/scripts. This results in
+    all the abstracts files being tagged with the gene
+    name/identifier, if present. Uses the m.filtered_terms_filename for search terms.
+
+    If the search term is also a 'stop word', then search.awk matches
+    case from filtered_terms.txt (which ultimately comes from NCBI's
+    gene_info.gz). Otherwise, case is permissive to accommodate
+    abstracts that use peculiar case for a gene. Note that terms in
+    filtered_terms.txt are also all lowercase for performance, accept
+    those that are stop words.
+
+    """
 
     filtered_terms_file = os.path.join(m.search_path(), m.filtered_terms_filename)
     csv_inpath = m.pub_outpath()
@@ -368,16 +431,19 @@ def create_gene_files(m: ReferenceData):
 def pipeline(m: ReferenceData):
     """Run the whole data pipeline, end to end. See QuickStart notebook for step-by-step outputs
 
-    EXAMPLE:
+    Example usage:
 
-      import gpubs
-      from gpubs.models import ReferenceData
-      from gpubs.api import pipeline
-
-      # Create data model
-      # exclude miRNA and MIM dbxrefs
-      m = ReferenceData(version = "../../v1", verbose = 2,num_abstract_xml_files = 3, dbxrefs = ["AllianceGenome.txt", "Ensembl.txt", "HGNC.txt", "IMGT_GENE-DB.txt"])
-      pipeline(m)
+      >>> import gpubs
+      >>> from gpubs.models import ReferenceData
+      >>> from gpubs.api import pipeline
+      >>>
+      >>> # Create data model
+      >>> # exclude miRNA and MIM dbxrefs
+      >>> m = ReferenceData(version = "../../v1",       # put data above the github repo
+      >>>                   verbose = 2,                # print info messages
+      >>>                   num_abstract_xml_files = 3, # only download 3 abstract XML files from NCBI
+      >>>                   dbxrefs = ["AllianceGenome.txt", "Ensembl.txt", "HGNC.txt", "IMGT_GENE-DB.txt"])
+      >>> pipeline(m)
 
     """
 

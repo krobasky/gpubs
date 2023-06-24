@@ -41,7 +41,7 @@ class ReferenceData(BaseModel):
     ncbi_ftp_updatefiles_path: str = "/pubmed/updatefiles/"
 
     data_root: str = "data/"
-    """ full path to where all the raw, reference, and generated data are stored """
+    """ Full path to where all the raw, reference, and generated data are stored """
 
     raw_data_path: str = "raw/"
 
@@ -50,7 +50,7 @@ class ReferenceData(BaseModel):
     dbxref_reference_data_path: str = "dbxrefs/"
 
     dbxrefs: List = []
-    """ if empty, it will just get filled with a list of all the files created in the m.dbxref_path() """
+    """ If empty, it will just get filled with a list of all the files created in the m.dbxref_path() """
 
     gene_info_filename: str = "gene_info.gz"
 
@@ -63,11 +63,6 @@ class ReferenceData(BaseModel):
     frequency_list_filename: str = "frequency_list.txt"
 
     corpus_stop_word_list_length: int = 4000
-
-    # old lsit
-    # custom_stop_words:List = ['ago', 'aim', 'amid', 'april', 'arch', 'bed', 'bite', 'bug', 'co', 'crop', 'damage', 'et',
-    #                'fast', 'fat', 'fate', 'gap', 'genesis', 'ii', 'iv', 'lamp', 'laser', 'mater', 'melt', 'mice', 'minor', 'mv', 'net',
-    #                'not', 'race', 'rank', 'se', 'sink', 'soft', 'spatial', 'steel', 'stop', 'tau', 'traits', 'via']
 
     # may overlap somewhat with stop words
     custom_stop_words: List = [
@@ -257,10 +252,10 @@ class ReferenceData(BaseModel):
     """ If None, version will e set to timestamp """
 
     rand_seed: int = 42
-    """ if None, reproducible within the same release"""
+    """ If None, reproducible within the same release"""
 
     version_root: str = None
-    """ leave this alone it will be computed as data_root/version """
+    """ Leave this alone it will be computed as data_root/version """
 
     @root_validator(pre=False, skip_on_failure=True)
     def valid_paths_for_data_tree(cls, v: Dict) -> Dict:
