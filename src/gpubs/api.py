@@ -401,6 +401,28 @@ def create_gene_files(m: ReferenceData):
     filtered_terms.txt are also all lowercase for performance, accept
     those that are stop words.
 
+    Note - to use a custom list of gene symbols/synonyms/accession
+    ids, just filter everything out of the filtered_terms.txt except
+    the genes of interest. Find the filtered_terms.txt file in
+    m.search_path()/m.filtered_terms_filename [default:
+    v1/data/search_terms/filtered_terms.txt]
+
+    This is the last setp of the pipeline
+
+    Exmample usage:
+
+    >>> m = ReferenceData()
+    >>> create_gene_reference_data(m) # get gene_info from NCBI
+    >>> _ = create_frequency_list(m)  # create English stop words from 'brown' corpus
+    >>> create_search_terms_file(m)   # combine the files parsed out of gene_info to get search terms
+    >>> _ = create_filtered_search_terms(m)  # filter search terms with stop words
+    >>> fetch_abstracts(m)            # download abstract XML files from NCBI
+    >>> fetch_abstracts(m, get_updates=True) # download abstract XML "updatefiles" from NCBI
+    >>> _ = create_pubcsv_dataset(m)  # translate abstract XML files to csv 
+    >>> # NOTE: keep only genes of interest in v1/data/search_terms/filtered_terms.txt
+    >>> create_gene_files(m)          # tag abstracts with the search terms (genes) from filtered_terms.txt
+    >>> # final files in m.genes_outpath [default= v1/data/csvpubs/genes]
+
     """
 
     filtered_terms_file = os.path.join(m.search_path(), m.filtered_terms_filename)
