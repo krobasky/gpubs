@@ -15,7 +15,7 @@ from gpubs.parse import parse_pubs
 
 
 def create_gene_reference_data(m: ReferenceData):
-    """ Gets gene reference data into a convenient format for creating a m.filtered_terms_files, and ultimately, tagging abstracts with gene information.
+    """Gets gene reference data into a convenient format for creating a m.filtered_terms_files, and ultimately, tagging abstracts with gene information.
 
     Performs the following:
 
@@ -87,7 +87,7 @@ def create_gene_reference_data(m: ReferenceData):
 
 
 def create_frequency_list(m: ReferenceData) -> List:
-    """ Creates a file that lists the most common English words, up to (m.corpus_stop_word_list_length) in size, 
+    """Creates a file that lists the most common English words, up to (m.corpus_stop_word_list_length) in size,
     and saves to m.search_path()/m.frequency_list_filename [default = v1/data/search_terms/frequency_list.txt]
 
     Returns:
@@ -187,7 +187,7 @@ def create_search_terms_file(m: ReferenceData):
 
 
 def create_filtered_search_terms(m: ReferenceData) -> List:
-    """Filters search_terms against m.frequency_list_filename and m.custom_stop_words. 
+    """Filters search_terms against m.frequency_list_filename and m.custom_stop_words.
 
     If the search term (e.g., gene name) is also a stop word (e.g.,
     'DANGER'), then retain the term's original case. Otherwise,

@@ -24,7 +24,7 @@ def read_search_stop(search_file, stop_words):
 
 
 def filter_search_terms(search_terms, stop_words):
-    filtered_terms = set() # use a set to avoid duplicates
+    filtered_terms = set()  # use a set to avoid duplicates
     matched_stop_words = []
 
     for term in search_terms:
