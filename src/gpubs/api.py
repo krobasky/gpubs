@@ -418,7 +418,7 @@ def create_gene_files(m: ReferenceData):
     >>> _ = create_filtered_search_terms(m)  # filter search terms with stop words
     >>> fetch_abstracts(m)            # download abstract XML files from NCBI
     >>> fetch_abstracts(m, get_updates=True) # download abstract XML "updatefiles" from NCBI
-    >>> _ = create_pubcsv_dataset(m)  # translate abstract XML files to csv 
+    >>> _ = create_pubcsv_dataset(m)  # translate abstract XML files to csv
     >>> # NOTE: keep only genes of interest in v1/data/search_terms/filtered_terms.txt
     >>> create_gene_files(m)          # tag abstracts with the search terms (genes) from filtered_terms.txt
     >>> # final files in m.genes_outpath [default= v1/data/csvpubs/genes]
