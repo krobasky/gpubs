@@ -81,6 +81,14 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/_build
+docs/source
+_static/
+_templates/
+src/sphinx-rtd-theme
+
+# black
+src/black/
 
 # PyBuilder
 .pybuilder/

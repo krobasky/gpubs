@@ -1,0 +1,8 @@
+[flake8]
+ignore = E226,E302,E41,E203,W503
+max-line-length = 220
+exclude =
+  tests/
+  src/sphinx-rtd-theme/
+  src/black/
+max-complexity = 10

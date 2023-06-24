@@ -1,0 +1,22 @@
+name: gpubs
+channels:
+  - defaults
+  - conda-forge
+  - bioconda
+dependencies:
+  - ipykernel==6.19.2
+  - myst-parser==2.0.0
+  - nltk==3.7
+  - pandas==1.5.3
+  - pip==23.1.2
+  - pydantic==1.10.8
+  - pytest==7.3.1
+  - python==3.9.16
+  - requests==2.29.0
+  - sphinx==7.0.1
+  - pip:
+    - flake8==6.0.0
+    - jello==1.5.5
+    - pytest-tap==3.3
+    - -e git+https://github.com/psf/black@22.12.0#egg=black
+    - -e git+https://github.com/snide/sphinx_rtd_theme@1.1.1#egg=sphinx_rtd_theme
