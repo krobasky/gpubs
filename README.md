@@ -14,7 +14,7 @@ conda activate gpubs
 ## Install with pip:
 
 ```
-python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps gpubs # to get it from test registry
+pip install gpubs
 ```
 
 ## To upload the package:
