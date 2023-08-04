@@ -34,6 +34,18 @@ def extract_data(element):
     )
     data["PublicationTypeList"] = ",".join([ptype.text for ptype in publication_types])
 
+    # find primary authors (1st, last, 2nd, next to last)
+    authors_list = element.findall('MedlineCitation/Article/AuthorList/Author')
+    # Sort authors based on their order within the list
+    authors = [author.findtext('.//LastName', default='') + ',' + author.findtext('.//ForeName', default='') + " " + author.findtext('.//Initials', default='') 
+               for author in sorted(authors_list, key=lambda x: authors_list.index(x))]
+               
+    data['Authors'] = ';'.join(authors)
+    #data['FirstAuthor'] = authors[1] if authors else None  # Get the first author if authors list is not empty
+    #data['SecondAuthor'] = authors[2] if authors else None  # Get second author if authors list is not empty
+    #data['NextLastAuthor'] = authors[-2] if authors else None  # Get the second to last author if authors list is not empty
+    data['LastAuthor'] = authors[-1] if authors else None  # Get the last author if authors list is not empty
+
     return data
 
 
