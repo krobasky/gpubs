@@ -7,7 +7,12 @@ def extract_data(element):
     data = {}
     data["PMID"] = element.findtext("MedlineCitation/PMID")
     data["Title"] = element.findtext("MedlineCitation/Article/ArticleTitle")
-    data["Abstract"] = element.findtext("MedlineCitation/Article/Abstract/AbstractText")
+    
+    # get all the AbstractText's
+    abstract_texts = element.findall("MedlineCitation/Article/Abstract/AbstractText")
+    # don't let a tag (like <sup>) truncate the text:
+    data["Abstract"] = "\n".join([ET.tostring(abstract_text, method="text", encoding="unicode") for abstract_text in abstract_texts])
+    
     data["Journal"] = element.findtext("MedlineCitation/Article/Journal/Title")
     data["PublicationDate"] = element.findtext(
         "MedlineCitation/Article/Journal/JournalIssue/PubDate/Year"
