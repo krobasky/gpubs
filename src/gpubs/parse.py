@@ -4,14 +4,43 @@ from gpubs.log import msg2
 
 
 def extract_data(element):
+    #import xml.etree.ElementTree as ET
+    import lxml.etree as ET
+
     data = {}
     data["PMID"] = element.findtext("MedlineCitation/PMID")
     data["Title"] = element.findtext("MedlineCitation/Article/ArticleTitle")
     
     # get all the AbstractText's
-    abstract_texts = element.findall("MedlineCitation/Article/Abstract/AbstractText")
-    # don't let a tag (like <sup>) truncate the text:
-    data["Abstract"] = "\n".join([ET.tostring(abstract_text, method="text", encoding="unicode") for abstract_text in abstract_texts])
+    def get_abstract(abstract_elements):
+
+        abstract_texts = []
+
+        for abstract_element in abstract_elements:
+            label = abstract_element.get('Label')
+            nlm_category = abstract_element.get('NlmCategory')
+
+            if label:
+                label_text = f"[{label}] "
+            elif nlm_category:
+                label_text = f"[{nlm_category}] "
+            else:
+                label_text = ""
+
+            # Serialize the element to a string and decode it to avoid truncating text
+            element_text = ET.tostring(abstract_element, method='text', encoding='unicode')
+
+            # Replace tab characters with 4 spaces directly on the element's text content
+            element_text = element_text.replace('\t', '    ').strip()
+
+            # Concatenate the label text and element text
+            abstract_texts.append(f"{label_text}{element_text}")
+
+        # Join all the abstract texts together
+        abstract_text = " ".join(abstract_texts)
+        return abstract_text
+
+    data["Abstract"] = get_abstract(element.findall("MedlineCitation/Article/Abstract/AbstractText"))
     
     data["Journal"] = element.findtext("MedlineCitation/Article/Journal/Title")
     data["PublicationDate"] = element.findtext(
@@ -81,7 +110,8 @@ def prune_df(df, length_threshold=405, verbose=2):
 
 def get_pub_df(filename, inpath, outpath, length_threshold, prune=True, verbose=0):
     import gzip
-    import xml.etree.ElementTree as ET
+    # import xml.etree.ElementTree as ET
+    import lxml.etree as ET
     import pandas as pd
 
     pubmed_filepath = os.path.join(inpath, filename)

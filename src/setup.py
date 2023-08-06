@@ -22,10 +22,11 @@ with open("./release-info.json") as f:
             include_package_data=True,
             install_requires=[
                 "ipykernel==6.19.2",
-                "pydantic==1.10.8",
-                "requests==2.29.0",
+                "lxml==4.9.2",
                 "nltk==3.7",
                 "pandas==1.5.3",
+                "pydantic==1.10.8",
+                "requests==2.29.0",
             ],
             scripts=[
                 "scripts/create_search_terms_file.sh",
